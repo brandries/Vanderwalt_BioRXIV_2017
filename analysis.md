@@ -37,6 +37,30 @@ As it utlizes a graphic-user-interface (GUI), no command options can be provided
 Assemblies were generated using default parameters and a word size (**k-mer**) of 55.
 
 ### IDBA-UD
+The following block of code was set up to perform complete assembly of a metagenome using IDBA-UD.
+
+IDBA-UD requires merging of paired end reads using `fq2fa`, and assembly was performed with iterative **k-mer** sizes up to 71. 
+The time taken to complete an assembly in real time was also assessed using base bash variables.
+```echo "assembly pipeline starting"
+echo "starting IDBA-UD"
+date
+#set variable for assessing wall-time taken for assembly
+vstart=$(date +%s) &&
+
+cd /home/andries/assembly_paper/metagenomes/soil/soil_warming/
+mkdir ./IDBA-UD                                                  
+cd ./IDBA-UD
+
+#merge fastq paired reads for idba-ud assembly
+~/Applications/assembly/idba/bin/fq2fa --merge --filter ./*_1.fastq ./*_2.fastq soil_warming_merge.fasta
+
+#assemble using idba-ud, with a maximum k-mer size of 71 
+/home/andries/Applications/assembly/idba/bin/idba_ud -o ./ --long_read /home/andries/assembly_paper/metagenomes/soil/soil_warming/soil_warming_merge.fasta --maxk 71 --num_threads 8
+
+echo "IDBA-UD just finished"
+echo "it took $(($(date +'%s')-$vstart)) seconds to complete this job" | mail -s "IDBA-UD just finished" andriesvanderwalt@gmail.com
+date
+```
 
 ### MEGAHIT
 
