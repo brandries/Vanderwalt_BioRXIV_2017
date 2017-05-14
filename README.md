@@ -13,3 +13,6 @@ Overall, we found that SPAdes provided the largest contigs and highest N50 value
 
 ### Conclusions
 Nevertheless, we found that assembler choice primarily hinges on the scientific question at hand, the resources available and the bioinformatic competence of the researcher. 
+
+
+# ***Please not that this REPO is still under construction and will be updated as soon as possible***
