@@ -23,7 +23,7 @@ mkdir ./IDBA-UD
 cd ./IDBA-UD
 
 #merge fastq paired reads for idba-ud assembly
-~/Applications/assembly/idba/bin/fq2fa --merge --filter ./*_1.fastq ./*_2.fastq soil_warming_merge.fasta
+~/Applications/assembly/idba/bin/fq2fa --merge --filter ../*_1.fastq ../*_2.fastq soil_warming_merge.fasta
 
 #assemble using idba-ud, with a maximum k-mer size of 71 
 /home/andries/Applications/assembly/idba/bin/idba_ud -o ./ --long_read ./*_merge.fasta --maxk 71 --num_threads 8
@@ -49,7 +49,7 @@ mkdir ./megahit
 cd ./megahit
 
 #assemble using megahit with iterative kmer lengths
-/home/andries/Applications/assembly/megahit_v1.0.6_LINUX_CPUONLY_x86_64-bin/megahit -1 ./*_1.fastq -2 ./*_2.fastq --presets meta -m 0.8 -t 8 -o ./assembly --verbose        
+/home/andries/Applications/assembly/megahit_v1.0.6_LINUX_CPUONLY_x86_64-bin/megahit -1 ../*_1.fastq -2 ../*_2.fastq --presets meta -m 0.8 -t 8 -o ./assembly --verbose        
 
 echo "megahit is finished"
 date
@@ -72,7 +72,7 @@ mkdir ./metaSPAdes
 cd ./metaSPAdes
 
 #run metaspades with iterative kmer sizes
-/home/andries/Applications/assembly/SPAdes-3.9.0-Linux/bin/spades.py -o ./ -1 ./*_1.fastq -2 ./*_2.fastq --meta -t 8 -m 400          
+/home/andries/Applications/assembly/SPAdes-3.9.0-Linux/bin/spades.py -o ./ -1 ../*_1.fastq -2 ../*_2.fastq --meta -t 8 -m 400          
 
 echo "metaSPAdes is finished"
 echo "it took $(($(date +'%s')-$mstart)) seconds to complete this job" | mail -s "metaSPAdes is finished" andriesvanderwalt@gmail.com
@@ -98,7 +98,7 @@ cd ./velvet
 export OMP_NUM_THREADS=7
 
 #first construct the debruijn graph using velveth
-velveth ./ 51 -fastq -shortPaired -separate ./*_filtered_1.fastq ./*_2.fastq & wait                       
+velveth ./ 51 -fastq -shortPaired -separate ../*_filtered_1.fastq ../*_2.fastq & wait                       
 
 #perform assembly using velvetg at **k-mer** 51
 cd ./_51
@@ -173,14 +173,36 @@ mkdir ./SPAdes                                                  #make spades dir
 cd ./SPAdes
 
 #perform assembly using iterative **k-mer** sizes
-/home/andries/Applications/assembly/SPAdes-3.9.0-Linux/bin/spades.py -o ./ -1 ./*_1.fastq -2 ./*_2.fastq -t 8 -m 400            
+/home/andries/Applications/assembly/SPAdes-3.9.0-Linux/bin/spades.py -o ./ -1 ../*_1.fastq -2 ../*_2.fastq -t 8 -m 400            
 
 
 echo "SPAdes just finished"
 echo "it took $(($(date +'%s')-$vstart)) seconds to complete this job" | mail -s "SPAdes just finished" andriesvanderwalt@gmail.com
-echo "it took $(($(date +'%s')-$vstart)) seconds  to complete this job" | mail -s "SPAdes just finished" mwvangoethem@gmail.com
 date
 ```
 ### Omega
+The following block of code was set up to perform complete assembly of a metagenome using [Omega](https://bitbucket.org/omicsbio/omega2)
 
+The Omega tool is modular, and requires first merging paired end reads, followed by reducing the dataset size by removing deplicate reads. The unique reads dataset is then used to construct the overlap graph, followed by generation of the assembly. 
+```
+date
+cd ~/assembly_paper/metagenomes/soil/soil_warming/
 
+mkdir omega
+cd omega
+
+#We first have to merge the reads
+/home/avanderwalt/lustre/softwares/OMEGA/bbmap/bbmerge.sh in1=../*_1.fastq in2=../*_2.fastq out=metagenome_merge.fastq outu1=metagenome_unm1.fastq outu2=metagenome_unm2.fastq
+
+#then we remove the contained reads using storm with a 50 bp overlap
+
+/home/avanderwalt/lustre/softwares/OMEGA/storm -i RemoveContainedReads -q metagenome_merge.fastq -s metagenome_merge.fastq -ht omega --ID 0 -t 8 -l 50 -o metagenome_unique.fastq
+
+#now construct the overlap graph
+
+/home/avanderwalt/lustre/softwares/OMEGA/storm -i ConstructOverlapGraph -q metagenome_unique.fastq -s metagenome_unique.fastq -ht omega -t 8 -l 50 -o metagenome_aligned
+
+/home/avanderwalt/lustre/softwares/OMEGA/omega2  -f ./metagenome_unique.fastq -e metagenome_aligned -ovl 50 -o metagenome_omega
+
+date
+```
