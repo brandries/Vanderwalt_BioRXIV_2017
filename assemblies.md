@@ -78,13 +78,42 @@ echo "metaSPAdes is finished"
 echo "it took $(($(date +'%s')-$mstart)) seconds to complete this job" | mail -s "metaSPAdes is finished" andriesvanderwalt@gmail.com
 date
 ```
+
+### Velvet
+The following block of code was set up to perform complete assembly of a metagenome using [Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)
+
+The assembly was performed at kmer length 51 to allow for comparison between assemblers at a standardized **k-mer** length.
+The time taken to complete an assembly in real time was also assessed using base bash variables
+```
+echo "starting velvet"
+date
+#set variable for assessing wall-time taken for assembly
+vstart=$(date +%s) &&
+
+cd /home/andries/assembly_paper/metagenomes/soil/soil_warming
+mkdir ./velvet                                                 
+cd ./velvet
+
+#set number of parellel threads to use
+export OMP_NUM_THREADS=7
+
+#first construct the debruijn graph using velveth
+velveth ./ 51 -fastq -shortPaired -separate ./*_filtered_1.fastq ./*_2.fastq & wait                       
+
+#perform assembly using velvetg at **k-mer** 51
+cd ./_51
+velvetg ./ -ins_length 100 -read_trkg yes                                                     
+
+echo "velvet just finished"
+echo "it took $(($(date +'%s')-$vstart)) seconds to complete this job" | mail -s "velvet just finished" andriesvanderwalt@gmail.com
+date
+```
+
 ### MetaVelvet
 
 ### Ray Meta
 
 ### SPAdes
-
-### Velvet
 
 ### Omega
 
